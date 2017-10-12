@@ -1,35 +1,40 @@
 import requests
 import xml.etree.ElementTree as ET
 
-# XML Parser
-def parseETA(stopCode):
+#############
+# Functions #
+#############
+
+# Get Trams
+def getTrams(stopCode):
     r = requests.get("https://hktramways.com//nextTram/geteat.php?stop_code=" + stopCode)
     root = ET.fromstring(r.content)
-
     return root
 
-# Get Trams for HVTc
-hvt = parseETA("HVT_B")
-hvt.extend(parseETA("HVT_K"))
-
-# Get ETA as int from XML entry
-def getETA(elem):
+# Get ETA for the tram
+def getTramETA(elem):
     return int(elem.attrib.get("arrive_in_second"))
 
-# Sort entries by ETA
-hvt[:] = sorted(hvt, key=getETA)
+########
+# Code #
+########
+
+# Get Trams for HVT
+trams = getTrams("HVT_B")
+trams.extend(getTrams("HVT_K"))
+
+# Sort entries by ETA (only necessary for extended entries)
+trams[:] = sorted(trams, key=getTramETA)
     
 # Print Output
-print("Destination\tETA")
+print("Route\tDestination\tETA")
 
-for child in hvt:
+for child in trams:
     if child.attrib.get("is_arrived") == "1":
         if child.attrib.get("is_last_tram") == "1":
-            print(child.attrib.get("tram_dest_en") + "\tArrived (Last Tram)")
+            print("Tram\t" + child.attrib.get("tram_dest_en") + "\tArrived (Last Tram)")
         else:
-            print(child.attrib.get("tram_dest_en") + "\tArrived")
+            print("Tram\t" + child.attrib.get("tram_dest_en") + "\tArrived")
     else:
-        print(child.attrib.get("tram_dest_en") + "\t" + child.attrib.get("arrive_in_minute"))
-        
-    #print(child.attrib.items())
+        print("Tram\t" + child.attrib.get("tram_dest_en") + "\t" + child.attrib.get("arrive_in_minute"))
     
