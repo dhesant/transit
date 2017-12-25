@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import requests
 import xml.etree.ElementTree as ET
 
@@ -7,7 +8,7 @@ import xml.etree.ElementTree as ET
 
 # Get Trams
 def getTrams(stopCode):
-    r = requests.get("https://hktramways.com//nextTram/geteat.php?stop_code=" + stopCode)
+    r = requests.get("https://hktramways.com/nextTram/geteat.php?stop_code=" + stopCode)
     root = ET.fromstring(r.content)
     return root
 
