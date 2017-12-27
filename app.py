@@ -12,15 +12,10 @@ def index():
 
 @app.route("/hvt")
 def hvt():
-    vehicles = sorted(getTrams("HVT") + getBuses("8x") + getBuses("19"), key=lambda k: k['eta'])
+    vehicles = sorted(getTrams("HVT") + getBuses("8x", 2552) + getBuses("19", 2552), key=lambda k: k['eta'])
 
-    now = datetime.today()
     for vehicle in vehicles:
-        if vehicle['isArrived']:
-            vehicle['status'] = "Arrived"
-        else:
-            dtime = vehicle['eta'] - now
-            vehicle['status'] = "In " + str(int(dtime.total_seconds() / 60)) + " Minutes"
+        vehicle = getVehicleStatus(vehicle, datetime.today())
     
     return render_template("transit.html", title="Happy Valley", stopinfo="Tram Terminus/Sanatorium", vehicles=vehicles)
 
@@ -28,30 +23,33 @@ def hvt():
 def cwb():
     vehicles = sorted(getTrams("105"), key=lambda k: k['eta'])
 
-    now = datetime.today()
     for vehicle in vehicles:
-        if vehicle['isArrived']:
-            vehicle['status'] = "Arrived"
-        else:
-            dtime = vehicle['eta'] - now
-            vehicle['status'] = "In " + str(int(dtime.total_seconds() / 60)) + " Minutes"
-    
+        vehicle = getVehicleStatus(vehicle, datetime.today())
+
     return render_template("transit.html", title="Causeway Bay", stopinfo="Times Square", vehicles=vehicles)
 
 @app.route("/tinhau")
 def tinhau():
-    vehicles = sorted(getTrams("59E"), key=lambda k: k['eta'])
+    vehicles = sorted(getTrams("59E") + getBuses("8x", 1214) + getBuses("19", 1214), key=lambda k: k['eta'])
 
-    now = datetime.today()
     for vehicle in vehicles:
-        if vehicle['isArrived']:
-            vehicle['status'] = "Arrived"
-        else:
-            dtime = vehicle['eta'] - now
-            vehicle['status'] = "In " + str(int(dtime.total_seconds() / 60)) + " Minutes"
+        vehicle = getVehicleStatus(vehicle, datetime.today())
     
     return render_template("transit.html", title="Causeway Bay", stopinfo="Times Square", vehicles=vehicles)
 
 if __name__ == "__main__":
     app.run()
 
+def getVehicleStatus(vehicle, time):
+    if vehicle['isArrived']:
+        if vehicle['isLast']:
+            vehicle['status'] = "Arrived (Last Vehicle)"
+        else:
+            vehicle['status'] = "Arrived"
+    else:
+        dtime = vehicle['eta'] - time
+        vehicle['status'] = "In " + str(int(dtime.total_seconds() / 60)) + " Minutes"
+
+    return vehicle
+    
+    

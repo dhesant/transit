@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 
+{% block head %}
+<meta http-equiv="refresh" content="15" />
+{% endblock %}
+
 {% block content %}
+
 <div class="row">
   <h2>{{ stopinfo }}</h2>
 </div>
@@ -17,7 +22,7 @@
     </thead>
     {% for vehicle in vehicles %}
     <tr>
-      <td style="max-width: 200px"><img src="{{url_for('static', filename='')}}{{vehicle.operator}}.svg" style="width: 100%" /></td>
+      <td><img src="{{url_for('static', filename='')}}{{vehicle.operator}}.svg" style="max-width: 200px" /></td>
       <td>{{ vehicle.route }}</td>
       <td>{{ vehicle.dest }}</td>
       <td>{{ vehicle.status }}</td>
