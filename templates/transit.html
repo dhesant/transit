@@ -22,7 +22,7 @@
     </thead>
     {% for vehicle in vehicles %}
     <tr>
-      <td><img src="{{url_for('static', filename='')}}{{vehicle.operator}}.svg" style="max-width: 200px" /></td>
+      <td><img src="{{url_for('static', filename='images/')}}{{vehicle.operator}}.svg" style="max-width: 200px" /></td>
       <td>{{ vehicle.route }}</td>
       <td>{{ vehicle.dest }}</td>
       <td>{{ vehicle.status }}</td>
