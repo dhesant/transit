@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+  <h2>{{ stopinfo }}</h2>
+</div>
+<div class="row">
+  <table class="table table-striped">
+    <thead class="thead-light">
+      <tr>
+	<th scope="col">Operator</th>
+	<th scope="col">Route</th>
+	<th scope="col">Destination</th>
+	<th scope="col">ETA</th>
+	<!-- <th scope="col">ETA (Debug)</th> -->
+      </tr>
+    </thead>
+    {% for vehicle in vehicles %}
+    <tr>
+      <td style="max-width: 200px"><img src="{{url_for('static', filename='')}}{{vehicle.operator}}.svg" style="width: 100%" /></td>
+      <td>{{ vehicle.route }}</td>
+      <td>{{ vehicle.dest }}</td>
+      <td>{{ vehicle.status }}</td>
+      <!-- <td>{{ vehicle.eta }}</td> -->
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}
