@@ -39,10 +39,10 @@ def getBuses(route):
     # Parse results into a dictionary
     soup = BeautifulSoup(raw, "lxml");
     
-    results = {"children": []}
+    results = []
     
     for child in soup.find(id="nextbux_list").children:
-        results["children"].append({
+        results.append({
             "route": soup.find(id="nextbus_title").find("tr").contents[1].string.upper(),
             #"route": route,
             "operator": operator[route],
@@ -53,4 +53,4 @@ def getBuses(route):
 
     return results
 
-print(getBuses("8X"))
+#print(getBuses("8X"))

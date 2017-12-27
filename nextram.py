@@ -1,41 +1,39 @@
 #!/usr/bin/python3
 import requests
 import xml.etree.ElementTree as ET
+import dateutil.parser as dparser
 
 #############
 # Functions #
 #############
 
 # Get Trams
-def getTrams(stopCode):
-    r = requests.get("https://hktramways.com/nextTram/geteat.php?stop_code=" + stopCode)
-    root = ET.fromstring(r.content)
+def getRawTrams(stopCode):
+    payload = {"stop_code": stopCode}
+    r = requests.get("https://hktramways.com/nextTram/geteat.php", params=payload)
+    return r.content
+
+def getXmlTrams(stopCode):
+    root = ET.fromstring(getRawTrams(stopCode))
     return root
 
-# Get ETA for the tram
-def getTramETA(elem):
-    return int(elem.attrib.get("arrive_in_second"))
-
-########
-# Code #
-########
-
-# Get Trams for HVT
-trams = getTrams("HVT_B")
-trams.extend(getTrams("HVT_K"))
-
-# Sort entries by ETA (only necessary for extended entries)
-trams[:] = sorted(trams, key=getTramETA)
-    
-# Print Output
-print("Route\tDestination\tETA")
-
-for child in trams:
-    if child.attrib.get("is_arrived") == "1":
-        if child.attrib.get("is_last_tram") == "1":
-            print("Tram\t" + child.attrib.get("tram_dest_en") + "\tArrived (Last Tram)")
-        else:
-            print("Tram\t" + child.attrib.get("tram_dest_en") + "\tArrived")
+def getTrams(stopCode):
+    if stopCode == "HVT":
+        trams = getXmlTrams("HVT_B")
+        trams.extend(getXmlTrams("HVT_K"))
     else:
-        print("Tram\t" + child.attrib.get("tram_dest_en") + "\t" + child.attrib.get("arrive_in_minute"))
-    
+        trams = getXmlTrams(stopCode)
+
+    results = []
+
+    for child in trams:
+        results.append({
+            "route": child.attrib.get("dest_stop_code"),
+            "operator": "hktramways",
+            "eta": dparser.parse(child.attrib.get("eat")),
+            "dest": child.attrib.get("tram_dest_en"),
+            "isArrived": (True if child.attrib.get("is_arrived") == "1" else False),
+            "isLast": (True if child.attrib.get("is_last_tram") == "1" else False),
+        })
+
+    return results
