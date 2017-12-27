@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import datetime
 import dateutil.parser as dparser
+import random
 
 # Map bus routes to system ID"s
 operator = { "8x": "citybus", "19": "citybus" }
@@ -14,8 +15,8 @@ stopcode = { "8x":
               1214: "001214||19-THR-3||23||O"}}
 
 # Create session cookie for HTML request
-ssid = "5a41dea32347b"
-ssidcookie = { ssid: "lpb8m4omcdcrk2fdm501g1h9p3"}
+ssid = '%013x' % random.randrange(16**13)
+ssidcookie = { ssid: '%026x' % random.randrange(16**26)}
 
 # Get raw data from nwstbus.com.hk
 def getRawBuses(route, stop):
@@ -53,7 +54,8 @@ def getBuses(route, stop):
             "operator": operator[route],
             "eta": dparser.parse(child.find_all("table")[0].td.string),
             "dest": child.find_all("table")[1].find_all("td")[0].string.replace("To: ", "" ,1),
-            "isArrived": (True if child.find_all("table")[1].find_all("td")[1].string == "Arrived" else False)
+            "isArrived": (True if child.find_all("table")[1].find_all("td")[1].string == "Arrived" else False),
+            "isLast": False,
         })
 
     return results

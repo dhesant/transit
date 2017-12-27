@@ -35,7 +35,7 @@ def tinhau():
     for vehicle in vehicles:
         vehicle = getVehicleStatus(vehicle, datetime.today())
     
-    return render_template("transit.html", title="Causeway Bay", stopinfo="Times Square", vehicles=vehicles)
+    return render_template("transit.html", title="Tin Hau", stopinfo="Tin Hau", vehicles=vehicles)
 
 if __name__ == "__main__":
     app.run()
