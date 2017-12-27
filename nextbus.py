@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup
 import datetime
 import dateutil.parser as dparser
 import random
+import asyncio
+from aiohttp import ClientSession
 
 # Map bus routes to system ID"s
 operator = { "8x": "citybus", "19": "citybus" }
@@ -14,43 +16,49 @@ stopcode = { "8x":
              {2552: "002552||19-ISR-1||8||I",
               1214: "001214||19-THR-3||23||O"}}
 
-# Create session cookie for HTML request
-ssid = '%013x' % random.randrange(16**13)
-ssidcookie = { ssid: '%026x' % random.randrange(16**26)}
-
 # Get raw data from nwstbus.com.hk
-def getRawBuses(route, stop):
-    payload = { "info": stopcode[route][stop], "ssid": ssid, "sysid": 34 }
-    r = requests.get("https://mobile.nwstbus.com.hk/nwp3/set_etasession.php", params=payload, cookies=ssidcookie)
-    if (r.text != "OK"):
-        return None
+async def getRawBuses(route, stop):
+    # Create session with unique ssid cookie
+    ssid = '%013x' % random.randrange(16**13)
+    ssidcookie = { ssid: '%026x' % random.randrange(16**26)}
+    async with ClientSession(cookies=ssidcookie) as session:
 
-    payload = { "l": "1", "ssid": ssid, "sysid": 34 }
-    r = requests.get("https://mobile.nwstbus.com.hk/nwp3/geteta.php", params=payload, cookies=ssidcookie)
-    if (r.text == ":("):
-        return None
+        payload = { "info": stopcode[route][stop], "ssid": ssid, "sysid": 34 }
+        async with session.get("https://mobile.nwstbus.com.hk/nwp3/set_etasession.php", params=payload) as resp:
+            #assert resp.status == 200
+            if (resp.text() != "OK"):
+                return ""
 
-    return r.text
+            await resp.read()
+            payload = { "l": "1", "ssid": ssid, "sysid": 34 }
+            async with session.get("https://mobile.nwstbus.com.hk/nwp3/geteta.php", params=payload) as resp:
+                #assert resp.status == 200
+                if (resp.text() == ":("):
+                    return ""
+                return await resp.text()
 
 # Get list of next buses
-def getBuses(route, stop):
+async def getBuses(route, stop):
     # Sanitize route number to lowercase
     route = route.lower()
 
     # Get and verify raw data from nwstbus.com.hk
-    raw = getRawBuses(route, stop)
-    if (raw == None):
-        return None
+    raw = await getRawBuses(route, stop)
+    if (raw == ""):
+        return []
 
-    # Parse results into a dictionary
-    soup = BeautifulSoup(raw, "lxml");
-    
+    # Import HTML for parsing
+    soup = BeautifulSoup(raw, "lxml")
+
+    # Ensure entries exist
+    if soup.find(id="nextbux_list").contents[0].find_all('table') == []:
+        return []
+
+    # Parse entries into dict
     results = []
-    
     for child in soup.find(id="nextbux_list").children:
         results.append({
             "route": soup.find(id="nextbus_title").find("tr").contents[1].string.upper(),
-            #"route": route,
             "operator": operator[route],
             "eta": dparser.parse(child.find_all("table")[0].td.string),
             "dest": child.find_all("table")[1].find_all("td")[0].string.replace("To: ", "" ,1),
@@ -60,4 +68,13 @@ def getBuses(route, stop):
 
     return results
 
-#print(getBuses("8X"))
+def testBuses():
+    loop = asyncio.get_event_loop()
+    futures = []
+    futures.append(asyncio.ensure_future(getBuses("8x", 2552)))
+    futures.append(asyncio.ensure_future(getBuses("19", 2552)))
+    loop.run_until_complete(asyncio.gather(*futures))
+    loop.stop()
+    for future in futures:
+        print(future.result())
+    
