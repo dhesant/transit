@@ -106,3 +106,6 @@ venv.bak/
 # emacs
 *~
 *#
+
+# Project specific files
+static/images/
