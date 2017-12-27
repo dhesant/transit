@@ -5,6 +5,7 @@ app = Flask(__name__)
 
 from nextram import getTrams
 from nextbus import getBuses
+import asyncio
 
 @app.route("/") # take note of this decorator syntax, it's a common pattern
 def index():
@@ -12,7 +13,24 @@ def index():
 
 @app.route("/hvt")
 def hvt():
-    vehicles = sorted(getTrams("HVT") + getBuses("8x", 2552) + getBuses("19", 2552), key=lambda k: k['eta'])
+    # Generate new async loop
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    # Get various route info
+    routes = []
+    routes.append(asyncio.ensure_future(getTrams("HVT")))
+    routes.append(asyncio.ensure_future(getBuses("8x", 2552)))
+    routes.append(asyncio.ensure_future(getBuses("19", 2552)))
+    loop.run_until_complete(asyncio.gather(*routes))
+    loop.stop()
+
+    # Compile and sort route into by vehicle ETA
+    vehicles = []
+    for route in routes:
+        vehicles.extend(route.result())
+
+    vehicles = sorted(vehicles, key=lambda k: k['eta'])
 
     for vehicle in vehicles:
         vehicle = getVehicleStatus(vehicle, datetime.today())
@@ -21,7 +39,22 @@ def hvt():
 
 @app.route("/cwb")
 def cwb():
-    vehicles = sorted(getTrams("105"), key=lambda k: k['eta'])
+    # Generate new async loop
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    # Get various route info
+    routes = []
+    routes.append(asyncio.ensure_future(getTrams("105")))
+    loop.run_until_complete(asyncio.gather(*routes))
+    loop.stop()
+
+    # Compile and sort route into by vehicle ETA
+    vehicles = []
+    for route in routes:
+        vehicles.extend(route.result())
+
+    vehicles = sorted(vehicles, key=lambda k: k['eta'])
 
     for vehicle in vehicles:
         vehicle = getVehicleStatus(vehicle, datetime.today())
@@ -30,7 +63,24 @@ def cwb():
 
 @app.route("/tinhau")
 def tinhau():
-    vehicles = sorted(getTrams("59E") + getBuses("8x", 1214) + getBuses("19", 1214), key=lambda k: k['eta'])
+    # Generate new async loop
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    # Get various route info
+    routes = []
+    routes.append(asyncio.ensure_future(getTrams("59E")))
+    routes.append(asyncio.ensure_future(getBuses("8x", 1214)))
+    routes.append(asyncio.ensure_future(getBuses("19", 1214)))
+    loop.run_until_complete(asyncio.gather(*routes))
+    loop.stop()
+
+    # Compile and sort route into by vehicle ETA
+    vehicles = []
+    for route in routes:
+        vehicles.extend(route.result())
+
+    vehicles = sorted(vehicles, key=lambda k: k['eta'])
 
     for vehicle in vehicles:
         vehicle = getVehicleStatus(vehicle, datetime.today())
