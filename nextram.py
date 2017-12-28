@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import requests
+#import requests
 import xml.etree.ElementTree as ET
 import dateutil.parser as dparser
 import asyncio

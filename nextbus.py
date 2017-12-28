@@ -1,9 +1,9 @@
 #!/usr/bin/python3.6
-import requests
+#import requests
 from bs4 import BeautifulSoup
 import datetime
 import dateutil.parser as dparser
-import random
+#import random
 import asyncio
 from aiohttp import ClientSession
 
@@ -73,8 +73,8 @@ def testBuses():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     futures = []
-    futures.append(asyncio.ensure_future(getRawBuses("8x", 1214)))
-    futures.append(asyncio.ensure_future(getRawBuses("19", 2552)))
+    futures.append(asyncio.ensure_future(getRawBuses("8x", 2552)))
+    futures.append(asyncio.ensure_future(getRawBuses("19", 1214)))
     futures.append(asyncio.ensure_future(getBuses("8x", 1214)))
     futures.append(asyncio.ensure_future(getBuses("19", 2552)))
     loop.run_until_complete(asyncio.gather(*futures))
