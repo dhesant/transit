@@ -28,11 +28,21 @@ async def getTrams(stopCode):
     # Parse results into dict
     results = []
     for child in trams:
+        route = child.attrib.get("dest_stop_code")
+        if (route == "HVT_B" or route == "HVT_K"):
+            route = "HVT"
+
+        dest = child.attrib.get("tram_dest_en")
+        if (dest == "Happy Valley Terminus K"):
+            dest = "Happy Valley Terminus (Westbound)"
+        elif (dest == "Happy Valley Terminus B"):
+            dest = "Happy Valley Terminus (Eastbound)"
+            
         results.append({
-            "route": child.attrib.get("dest_stop_code"),
+            "route": route,
             "operator": "hktramways",
             "eta": dparser.parse(child.attrib.get("eat")),
-            "dest": child.attrib.get("tram_dest_en"),
+            "dest": dest,
             "isArrived": (True if child.attrib.get("is_arrived") == "1" else False),
             "isLast": (True if child.attrib.get("is_last_tram") == "1" else False),
         })
