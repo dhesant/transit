@@ -69,7 +69,7 @@ def tinhau():
 
     # Get various route info
     routes = []
-    routes.append(asyncio.ensure_future(getTrams("59E")))
+    routes.append(asyncio.ensure_future(getTrams("40W")))
     routes.append(asyncio.ensure_future(getBuses("8x", 1214)))
     routes.append(asyncio.ensure_future(getBuses("19", 1214)))
     loop.run_until_complete(asyncio.gather(*routes))

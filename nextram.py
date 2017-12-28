@@ -34,7 +34,7 @@ async def getTrams(stopCode):
             "eta": dparser.parse(child.attrib.get("eat")),
             "dest": child.attrib.get("tram_dest_en"),
             "isArrived": (True if child.attrib.get("is_arrived") == "1" else False),
-            #"isLast": (True if child.attrib.get("is_last_tram") == "1" else False),
+            "isLast": (True if child.attrib.get("is_last_tram") == "1" else False),
         })
 
     return results

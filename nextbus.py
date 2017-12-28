@@ -10,33 +10,38 @@ from aiohttp import ClientSession
 # Map bus routes to system ID"s
 operator = { "8x": "citybus", "19": "citybus" }
 stopcode = { "8x":
-             {2552: "002552||8X-ISR-1||3||I",
-              1214: "001214||8X-HVL-1||23||O"},
-             "19":
-             {2552: "002552||19-ISR-1||8||I",
-              1214: "001214||19-THR-3||23||O"}}
+              {
+                  2552: "8X||002552||3||I||8X-ISR-1",
+                  1214: "8X||001214||23||O||8X-HVL-1"},
+              "19":
+              {
+                  2552: "19||002552||8||I||19-ISR-1",
+                  1214: "19||001214||23||O||19-THR-3"},
+              }
+              
 
 # Get raw data from nwstbus.com.hk
 async def getRawBuses(route, stop):
-    # Create session with unique ssid cookie
-    ssid = '%013x' % random.randrange(16**13)
-    ssidcookie = { ssid: '%026x' % random.randrange(16**26)}
-    async with ClientSession(cookies=ssidcookie) as session:
-
-        payload = { "info": stopcode[route][stop], "ssid": ssid, "sysid": 34 }
-        async with session.get("https://mobile.nwstbus.com.hk/nwp3/set_etasession.php", params=payload) as resp:
-            #assert resp.status == 200
-            if (resp.text() != "OK"):
-                return ""
-
+    async with ClientSession() as session:
+        params = { "info": stopcode[route][stop] }
+        async with session.get("https://mobile.nwstbus.com.hk/text/set_etasession.php", params=params) as resp:
             await resp.read()
-            payload = { "l": "1", "ssid": ssid, "sysid": 34 }
-            async with session.get("https://mobile.nwstbus.com.hk/nwp3/geteta.php", params=payload) as resp:
-                #assert resp.status == 200
-                if (resp.text() == ":("):
-                    return ""
-                return await resp.text()
+        
+        params = { "l": "1" }
+        async with session.get("https://mobile.nwstbus.com.hk/text/geteta.php", params=params) as resp:
+            return await resp.text()
+        
+# Get raw data from nwstbus.com.hk
+def getRawBusesSync(route, stop):
+    s = requests.Session()
+    
+    params = { "info": stopcode[route][stop] }
+    resp = s.get("https://mobile.nwstbus.com.hk/text/set_etasession.php", params=params)
 
+    params = { "l" : "1" }
+    resp = s.get("https://mobile.nwstbus.com.hk/text/geteta.php", params=params)
+    return resp.text
+    
 # Get list of next buses
 async def getBuses(route, stop):
     # Sanitize route number to lowercase
@@ -50,28 +55,27 @@ async def getBuses(route, stop):
     # Import HTML for parsing
     soup = BeautifulSoup(raw, "lxml")
 
-    # Ensure entries exist
-    if soup.find(id="nextbux_list").contents[0].find_all('table') == []:
-        return []
-
     # Parse entries into dict
     results = []
-    for child in soup.find(id="nextbux_list").children:
+    for row in soup.body.find_all('tr')[1:]:
         results.append({
-            "route": soup.find(id="nextbus_title").find("tr").contents[1].string.upper(),
+            "route": soup.body.h2.contents[0].string.replace("Route ", "", 1),
             "operator": operator[route],
-            "eta": dparser.parse(child.find_all("table")[0].td.string),
-            "dest": child.find_all("table")[1].find_all("td")[0].string.replace("To: ", "" ,1),
-            "isArrived": (True if child.find_all("table")[1].find_all("td")[1].string == "Arrived" else False),
+            "eta": dparser.parse(row.find_all('td')[0].string),
+            "dest": row.find_all('td')[1].string.replace("To: ", "" ,1),
+            "isArrived": (True if row.find_all('td')[2].string == "Arrived" else False),
             "isLast": False,
         })
 
     return results
 
 def testBuses():
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     futures = []
-    futures.append(asyncio.ensure_future(getBuses("8x", 2552)))
+    futures.append(asyncio.ensure_future(getRawBuses("8x", 1214)))
+    futures.append(asyncio.ensure_future(getRawBuses("19", 2552)))
+    futures.append(asyncio.ensure_future(getBuses("8x", 1214)))
     futures.append(asyncio.ensure_future(getBuses("19", 2552)))
     loop.run_until_complete(asyncio.gather(*futures))
     loop.stop()
