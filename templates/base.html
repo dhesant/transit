@@ -8,34 +8,48 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
 
     {% if title %}
-    <title>{{ title }} - Firepony Transit</title>
+    <title>{{ title }} - Firepony Industries</title>
     {% else %}
-    <title>Firepony Transit</title>
+    <title>Firepony Industries</title>
     {% endif %}
 
-    <link rel="stylesheet" href="{{url_for('static', filename='css/bootstrap.min.css')}}" />
+    <!--<link rel="stylesheet" href="{{url_for('static', filename='css/bootstrap.min.css')}}" />-->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     {% block head %}{% endblock %}
   </head>
 
   <body>
 
     <nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light">
-      <a class="navbar-brand" href="/">Firepony Transit</a>
+      <a class="navbar-brand" href="/">Firepony Industries</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
 	<span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
-	<div class="navbar-nav">
-	  <a class="nav-item nav-link" href="/">Home</a>
-	  <a class="nav-item nav-link" href="/hvt">Happy Valley</a>
-	  <a class="nav-item nav-link" href="/cwb">Causeway Bay</a>
-	  <a class="nav-item nav-link" href="/tinhau">Tin Hau</a>
-	</div>
+	<ul class="navbar-nav mr-auto">
+	  <li class="nav-item"><a class="nav-link" href="/plexpy">PlexPy</a></li>
+	  <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Transit
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+	      <a class="dropdown-item" href="/transit/hvt">Happy Valley</a>
+	      <a class="dropdown-item" href="/transit/cwb">Causeway Bay</a>
+	      <a class="dropdown-item" href="/transit/tinhau">Tin Hau</a>
+            </div>
+	  </li>
+	  <li class="nav-item"><a class="nav-link" href="/sonarr">Sonarr</a></li>
+	  <li class="nav-item"><a class="nav-link" href="/radarr">Radarr</a></li>
+	  <li class="nav-item"><a class="nav-link" href="/duplicati">Duplicati</a></li>
+	</ul>
       </div>
     </nav>
     
     <div class="container">
       {% block content %}{% endblock %}
     </div>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
   </body>
 </html>

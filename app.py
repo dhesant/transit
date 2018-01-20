@@ -5,13 +5,14 @@ app = Flask(__name__)
 
 from nextram import getTrams
 from nextbus import getBuses
+from math import ceil
 import asyncio
 
 @app.route("/") # take note of this decorator syntax, it's a common pattern
 def index():
     return render_template("index.html")
 
-@app.route("/hvt")
+@app.route("/transit/hvt")
 def hvt():
     # Generate new async loop
     loop = asyncio.new_event_loop()
@@ -37,7 +38,7 @@ def hvt():
     
     return render_template("transit.html", title="Happy Valley", stopinfo="Tram Terminus/Sanatorium", vehicles=vehicles)
 
-@app.route("/cwb")
+@app.route("/transit/cwb")
 def cwb():
     # Generate new async loop
     loop = asyncio.new_event_loop()
@@ -61,7 +62,7 @@ def cwb():
 
     return render_template("transit.html", title="Causeway Bay", stopinfo="Times Square", vehicles=vehicles)
 
-@app.route("/tinhau")
+@app.route("/transit/tinhau")
 def tinhau():
     # Generate new async loop
     loop = asyncio.new_event_loop()
@@ -98,7 +99,7 @@ def getVehicleStatus(vehicle, time):
             vehicle['status'] = "Arrived"
     else:
         dtime = vehicle['eta'] - time
-        vehicle['status'] = "In " + str(int(dtime.total_seconds() / 60)) + " Minutes"
+        vehicle['status'] = "In " + str(ceil(dtime.total_seconds() / 60)) + " Minutes"
 
     return vehicle
     
