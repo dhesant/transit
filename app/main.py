@@ -21,8 +21,9 @@ def hvt():
     # Get various route info
     routes = []
     routes.append(asyncio.ensure_future(getTrams("HVT")))
-    routes.append(asyncio.ensure_future(getBuses("8x", 2552)))
-    routes.append(asyncio.ensure_future(getBuses("19", 2552)))
+    routes.append(asyncio.ensure_future(getBuses("8x", "8X||002552||3||I||8X-ISR-1")))
+    routes.append(asyncio.ensure_future(getBuses("19", "19||002552||8||I||19-ISR-1")))
+    routes.append(asyncio.ensure_future(getBuses("1", "1||002552||6||I||1-FEV-1")))
     loop.run_until_complete(asyncio.gather(*routes))
     loop.stop()
 
@@ -62,6 +63,31 @@ def cwb():
 
     return render_template("transit.html", title="Causeway Bay", stopinfo="Times Square", vehicles=vehicles)
 
+@app.route("/transit/wanchai")
+def wanchai():
+    # Generate new async loop
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    # Get various route info
+    routes = []
+    routes.append(asyncio.ensure_future(getTrams("39E")))
+    routes.append(asyncio.ensure_future(getBuses("1", "1||002427||22||O||1-HVU-1")))
+    loop.run_until_complete(asyncio.gather(*routes))
+    loop.stop()
+
+    # Compile and sort route into by vehicle ETA
+    vehicles = []
+    for route in routes:
+        vehicles.extend(route.result())
+
+    vehicles = sorted(vehicles, key=lambda k: k['eta'])
+
+    for vehicle in vehicles:
+        vehicle = getVehicleStatus(vehicle, datetime.today())
+
+    return render_template("transit.html", title="Wan Chai", stopinfo="Fenwick St", vehicles=vehicles)
+
 @app.route("/transit/tinhau")
 def tinhau():
     # Generate new async loop
@@ -71,8 +97,8 @@ def tinhau():
     # Get various route info
     routes = []
     routes.append(asyncio.ensure_future(getTrams("40W")))
-    routes.append(asyncio.ensure_future(getBuses("8x", 1214)))
-    routes.append(asyncio.ensure_future(getBuses("19", 1214)))
+    routes.append(asyncio.ensure_future(getBuses("8x", "8X||001214||23||O||8X-HVL-1")))
+    routes.append(asyncio.ensure_future(getBuses("19", "19||001214||23||O||19-THR-3")))
     loop.run_until_complete(asyncio.gather(*routes))
     loop.stop()
 
