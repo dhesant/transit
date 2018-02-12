@@ -132,11 +132,21 @@ def _sync_getRouteStopsAll(route):
     loop.run_until_complete(asyncio.gather(*futures))
     loop.stop()
 
-    services = []
+    stops = []
     for future in futures:
-        services.extend(future.result())
-    return services
+        stops.extend(future.result())
+    return stops
     
+
+def printRouteStops(routeName):
+    routes = getRouteList()
+    for r in routes:
+        if (r['route'] == routeName):
+            route = r
+            stops = _sync_getRouteStopsAll(route)
+            for stop in stops:
+                stopCode = r['route'] + "||" + stop['stopID'] + "||" + stop['stopCount'] + "||" + route['direction'] + "||" + stop['serviceCode']
+                print(r['route'] + " (" + r['destName'] + "): " + stop['stopName'] + " (" + stopCode + ")")
 
 routes = getRouteList()
 print(routes[0])
