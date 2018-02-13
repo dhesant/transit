@@ -25,9 +25,9 @@ def getRouteList():
                 'destName': raw[5],
                 #'unknown6': raw[6],
                 'variantCode': raw[7],
-                'serviceID': raw[8],
-                'direction': raw[9],
-                'remarks': raw[10],
+                #'serviceID': raw[8],
+                #'bound': raw[9],
+                'remarks': raw[10].replace("|*|", "", 1),
                 }
             routes.append(parsed)
         else:
@@ -35,9 +35,9 @@ def getRouteList():
             
     return routes
 
-async def getRouteServices(variantCode):
+async def getRouteServices(route):
     async with ClientSession() as session:
-        apiURL = "http://mobile.nwstbus.com.hk/api6/getvariantlist.php?id=" + variantCode + "&l=1&syscode=" + getSysCode()
+        apiURL = "http://mobile.nwstbus.com.hk/api6/getvariantlist.php?id=" + route['variantCode'] + "&l=1&syscode=" + getSysCode()
         async with session.get(apiURL) as resp:
             r = await resp.text()
 
@@ -49,12 +49,13 @@ async def getRouteServices(variantCode):
         if (len(raw) == 5):
             splitCode = raw[4].split("***")
             parsed = {
-                'operator': splitCode[0],
+                'route': route,
+                #'operator': splitCode[0],
                 'serviceCode': splitCode[1],
                 'startCount': splitCode[2],
                 'endCount': splitCode[3],
                 'serviceID': splitCode[4],
-                'direction': splitCode[5],
+                'bound': splitCode[5],
                 'description': raw[3],
             }
             services.append(parsed)
@@ -70,7 +71,7 @@ def getAllRouteServices():
     futures = []
 
     for route in routes:
-        futures.append(asyncio.ensure_future(getRouteServices(route['variantCode'])))
+        futures.append(asyncio.ensure_future(getRouteServices(route)))
 
     loop.run_until_complete(asyncio.gather(*futures))
     loop.stop()
@@ -82,7 +83,7 @@ def getAllRouteServices():
 
 async def getRouteStops(service):
     async with ClientSession() as session:
-        info = "1|*|" + service['operator'] + "||" + service['serviceCode'] + "||" + service['startCount'] + "||" + service['endCount'];
+        info = "1|*|" + service['route']['operator'] + "||" + service['serviceCode'] + "||" + service['startCount'] + "||" + service['endCount'];
         apiURL = "https://mobile.nwstbus.com.hk/api6/ppstoplist.php?info=" + info + "&l=1&syscode=" + getSysCode()
         async with session.get(apiURL) as resp:
             r = await resp.text()
@@ -93,7 +94,8 @@ async def getRouteStops(service):
             break
         raw = stop.split("||")
         parsed = {
-            'serviceCode': raw[1],
+            'service': service,
+            #'serviceCode': raw[1],
             'stopCount': raw[2],
             'stopID': raw[3],
             'poleID': raw[4],
@@ -102,7 +104,7 @@ async def getRouteStops(service):
                 'longitude': raw[6],
                 },
             'stopName': raw[7],
-            'destName': raw[8],
+            #'destName': raw[8],
             'fares': {
                 'adultFare': raw[10],
                 'childFare': raw[12],
@@ -113,7 +115,7 @@ async def getRouteStops(service):
     return stops
 
 async def getRouteStopsAll(route):
-    services = await getRouteServices(route['variantCode'])
+    services = await getRouteServices(route)
 
     allStops = []
     for service in services:
@@ -122,33 +124,35 @@ async def getRouteStopsAll(route):
 
     return allStops
 
-def _sync_getRouteStopsAll(route):
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    futures = []
-
-    futures.append(asyncio.ensure_future(getRouteStopsAll(route)))
-
-    loop.run_until_complete(asyncio.gather(*futures))
-    loop.stop()
-
-    stops = []
-    for future in futures:
-        stops.extend(future.result())
-    return stops
+async def getNextBus(stop):
+    async with ClientSession() as session:
+        apiURL = "http://mobile.nwstbus.com.hk/api6/getnextbus2.php?stopid=" + stop['stopID'] + "&service_no=" + stop['service']['route']['route'] + "&removeRepeatedSuspend=Y&interval=60&l=1&bound=" + stop['service']['bound'] + "&stopseq=" + stop['stopCount'] + "&rdv=" + stop['service']['serviceCode'] + "&syscode="  + getSysCode()
+        async with session.get(apiURL) as resp:
+            return await resp.text()
     
-
 def printRouteStops(routeName):
     routes = getRouteList()
     for r in routes:
         if (r['route'] == routeName):
             route = r
-            stops = _sync_getRouteStopsAll(route)
+            stops = runAsync(getRouteStopsAll(route))
             for stop in stops:
-                stopCode = r['route'] + "||" + stop['stopID'] + "||" + stop['stopCount'] + "||" + route['direction'] + "||" + stop['serviceCode']
-                print(r['route'] + " (" + r['destName'] + "): " + stop['stopName'] + " (" + stopCode + ")")
+                stopCode = stop['service']['route']['route'] + "||" + stop['stopID'] + "||" + stop['stopCount'] + "||" + stop['service']['bound'] + "||" + stop['service']['serviceCode']
+                print(stop['service']['route']['route'] + " (" + stop['service']['route']['destName'] + "): " + stop['stopName'] + " (" + stopCode + ")")
 
+def runAsync(func):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    future = asyncio.ensure_future(func)
+
+    loop.run_until_complete(asyncio.gather(future))
+    loop.close()
+
+    return future.result()
+                
 routes = getRouteList()
 print(routes[0])
-services = getAllRouteServices()
-print(services[0])
+
+r = routes[0]
+v = runAsync(getRouteServices(r))
+s = runAsync(getRouteStopsAll(r))
