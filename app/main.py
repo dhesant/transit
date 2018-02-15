@@ -86,7 +86,32 @@ def wanchai():
     for vehicle in vehicles:
         vehicle = getVehicleStatus(vehicle, datetime.today())
 
-    return render_template("transit.html", title="Wan Chai", stopinfo="Fenwick St", vehicles=vehicles)
+    return render_template("transit.html", title="Wan Chai", stopinfo="Fenwick Street", vehicles=vehicles)
+
+@app.route("/transit/central")
+def central():
+    # Generate new async loop
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    # Get various route info
+    routes = []
+    routes.append(asyncio.ensure_future(getTrams("27E")))
+    routes.append(asyncio.ensure_future(getBuses("1", "1||001049||19||O||1-HVU-1")))
+    loop.run_until_complete(asyncio.gather(*routes))
+    loop.stop()
+
+    # Compile and sort route into by vehicle ETA
+    vehicles = []
+    for route in routes:
+        vehicles.extend(route.result())
+
+    vehicles = sorted(vehicles, key=lambda k: k['eta'])
+
+    for vehicle in vehicles:
+        vehicle = getVehicleStatus(vehicle, datetime.today())
+
+    return render_template("transit.html", title="Central", stopinfo="Douglas Street", vehicles=vehicles)
 
 @app.route("/transit/tinhau")
 def tinhau():
@@ -112,7 +137,33 @@ def tinhau():
     for vehicle in vehicles:
         vehicle = getVehicleStatus(vehicle, datetime.today())
     
-    return render_template("transit.html", title="Tin Hau", stopinfo="Tin Hau", vehicles=vehicles)
+    return render_template("transit.html", title="Tin Hau", stopinfo="Queens College", vehicles=vehicles)
+
+@app.route("/transit/fortress")
+def fortress():
+    # Generate new async loop
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    # Get various route info
+    routes = []
+    routes.append(asyncio.ensure_future(getTrams("34W")))
+    routes.append(asyncio.ensure_future(getBuses("8x", "8X||001364||20||O||8X-HVL-1")))
+    routes.append(asyncio.ensure_future(getBuses("19", "19||001364||20||O||19-THR-3")))
+    loop.run_until_complete(asyncio.gather(*routes))
+    loop.stop()
+
+    # Compile and sort route into by vehicle ETA
+    vehicles = []
+    for route in routes:
+        vehicles.extend(route.result())
+
+    vehicles = sorted(vehicles, key=lambda k: k['eta'])
+
+    for vehicle in vehicles:
+        vehicle = getVehicleStatus(vehicle, datetime.today())
+    
+    return render_template("transit.html", title="Fortress Hill", stopinfo="King's Road", vehicles=vehicles)
 
 if __name__ == "__main__":
     app.run()
