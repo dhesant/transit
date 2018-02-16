@@ -1,7 +1,7 @@
 #!/usr/bin/python3.6
 #import requests
 from bs4 import BeautifulSoup
-import datetime
+from datetime import datetime, timedelta
 import dateutil.parser as dparser
 #import random
 import asyncio
@@ -60,10 +60,14 @@ async def getBuses(route, stopcode):
     # Parse entries into dict
     results = []
     for row in soup.body.find_all('tr')[1:]:
+        eta = dparser.parse(row.find_all('td')[0].string)
+        # Ensure time in in future (i.e. midnight the next day)
+        if ((eta - datetime.today()) <= timedelta(minutes=-5)):
+            eta = eta + timedelta(days=1)
         results.append({
             "route": soup.body.h2.contents[0].string.replace("Route ", "", 1),
             "operator": operator[route],
-            "eta": dparser.parse(row.find_all('td')[0].string),
+            "eta": eta,
             "dest": row.find_all('td')[1].string.replace("To: ", "" ,1),
             "isArrived": (True if row.find_all('td')[2].string == "Arrived" else False),
             "isLast": False,

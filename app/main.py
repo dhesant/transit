@@ -32,11 +32,8 @@ def hvt():
     for route in routes:
         vehicles.extend(route.result())
 
-    vehicles = sorted(vehicles, key=lambda k: k['eta'])
+    vehicles = parseVehicleStream(vehicles, datetime.today())
 
-    for vehicle in vehicles:
-        vehicle = getVehicleStatus(vehicle, datetime.today())
-    
     return render_template("transit.html", title="Happy Valley", stopinfo="Tram Terminus/Sanatorium", vehicles=vehicles)
 
 @app.route("/transit/cwb")
@@ -56,10 +53,7 @@ def cwb():
     for route in routes:
         vehicles.extend(route.result())
 
-    vehicles = sorted(vehicles, key=lambda k: k['eta'])
-
-    for vehicle in vehicles:
-        vehicle = getVehicleStatus(vehicle, datetime.today())
+    vehicles = parseVehicleStream(vehicles, datetime.today())
 
     return render_template("transit.html", title="Causeway Bay", stopinfo="Times Square", vehicles=vehicles)
 
@@ -81,10 +75,7 @@ def wanchai():
     for route in routes:
         vehicles.extend(route.result())
 
-    vehicles = sorted(vehicles, key=lambda k: k['eta'])
-
-    for vehicle in vehicles:
-        vehicle = getVehicleStatus(vehicle, datetime.today())
+    vehicles = parseVehicleStream(vehicles, datetime.today())
 
     return render_template("transit.html", title="Wan Chai", stopinfo="Fenwick Street", vehicles=vehicles)
 
@@ -106,10 +97,7 @@ def central():
     for route in routes:
         vehicles.extend(route.result())
 
-    vehicles = sorted(vehicles, key=lambda k: k['eta'])
-
-    for vehicle in vehicles:
-        vehicle = getVehicleStatus(vehicle, datetime.today())
+    vehicles = parseVehicleStream(vehicles, datetime.today())
 
     return render_template("transit.html", title="Central", stopinfo="Douglas Street", vehicles=vehicles)
 
@@ -132,11 +120,8 @@ def tinhau():
     for route in routes:
         vehicles.extend(route.result())
 
-    vehicles = sorted(vehicles, key=lambda k: k['eta'])
+    vehicles = parseVehicleStream(vehicles, datetime.today())
 
-    for vehicle in vehicles:
-        vehicle = getVehicleStatus(vehicle, datetime.today())
-    
     return render_template("transit.html", title="Tin Hau", stopinfo="Queens College", vehicles=vehicles)
 
 @app.route("/transit/fortress")
@@ -158,15 +143,20 @@ def fortress():
     for route in routes:
         vehicles.extend(route.result())
 
-    vehicles = sorted(vehicles, key=lambda k: k['eta'])
+    vehicles = parseVehicleStream(vehicles, datetime.today())
 
-    for vehicle in vehicles:
-        vehicle = getVehicleStatus(vehicle, datetime.today())
-    
     return render_template("transit.html", title="Fortress Hill", stopinfo="King's Road", vehicles=vehicles)
 
 if __name__ == "__main__":
     app.run()
+
+def parseVehicleStream(vehicles, time):
+    v2 = []
+    for vehicle in vehicles:
+        if ((vehicle['eta'] - time) <= timedelta(minutes=30)):
+            v2.append(getVehicleStatus(vehicle, time))
+
+    return sorted(v2, key=lambda k: k['eta'])
 
 def getVehicleStatus(vehicle, time):
     if vehicle['isArrived']:
