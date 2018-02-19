@@ -147,6 +147,28 @@ def fortress():
 
     return render_template("transit.html", title="Fortress Hill", stopinfo="King's Road", vehicles=vehicles)
 
+@app.route("/transit/syp")
+def syp():
+    # Generate new async loop
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    # Get various route info
+    routes = []
+    routes.append(asyncio.ensure_future(getTrams("09E")))
+    routes.append(asyncio.ensure_future(getBuses("1", "1||001060||11||O||1-HVU-1")))
+    loop.run_until_complete(asyncio.gather(*routes))
+    loop.stop()
+
+    # Compile and sort route into by vehicle ETA
+    vehicles = []
+    for route in routes:
+        vehicles.extend(route.result())
+
+    vehicles = parseVehicleStream(vehicles, datetime.today())
+
+    return render_template("transit.html", title="Sai Ying Pun", stopinfo="Hill Road", vehicles=vehicles)
+
 if __name__ == "__main__":
     app.run()
 
