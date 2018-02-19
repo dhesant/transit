@@ -156,7 +156,7 @@ def syp():
     # Get various route info
     routes = []
     routes.append(asyncio.ensure_future(getTrams("09E")))
-    routes.append(asyncio.ensure_future(getBuses("1", "1||001060||11||O||1-HVU-1")))
+    routes.append(asyncio.ensure_future(getBuses("1", "1||001061||12||O||1-HVU-1")))
     loop.run_until_complete(asyncio.gather(*routes))
     loop.stop()
 
