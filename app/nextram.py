@@ -1,13 +1,13 @@
 #!/usr/bin/python3
-#import requests
-import xml.etree.ElementTree as ET
-import dateutil.parser as dparser
 import asyncio
+import dateutil.parser as dparser
+import xml.etree.ElementTree as ET
 from aiohttp import ClientSession
 
 #############
 # Functions #
 #############
+
 
 # Get Trams
 async def getRawTrams(stopCode):
@@ -16,6 +16,7 @@ async def getRawTrams(stopCode):
         async with session.get("https://hktramways.com/nextTram/geteat.php", params=payload) as resp:
             root = ET.fromstring(await resp.text())
             return root
+
 
 async def getTrams(stopCode):
     # Special handler for Happy Valley
@@ -33,11 +34,11 @@ async def getTrams(stopCode):
             route = "HVT"
 
         dest = child.attrib.get("tram_dest_en")
-        if (dest == "Happy Valley Terminus K"):
+        if dest == "Happy Valley Terminus K":
             dest = "Happy Valley Terminus (Westbound)"
-        elif (dest == "Happy Valley Terminus B"):
+        elif dest == "Happy Valley Terminus B":
             dest = "Happy Valley Terminus (Eastbound)"
-            
+
         results.append({
             "route": route,
             "operator": "hktramways",
@@ -48,6 +49,7 @@ async def getTrams(stopCode):
         })
 
     return results
+
 
 def testTrams():
     loop = asyncio.get_event_loop()

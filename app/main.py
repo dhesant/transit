@@ -1,16 +1,19 @@
 # from http://flask.pocoo.org/ tutorial
-from flask import Flask, render_template
+import asyncio
 from datetime import datetime, timedelta
-app = Flask(__name__)
-
+from math import ceil
+from flask import Flask, render_template
 from nextram import getTrams
 from nextbus import getBuses
-from math import ceil
-import asyncio
 
-@app.route("/") # take note of this decorator syntax, it's a common pattern
+
+app = Flask(__name__)
+
+
+@app.route("/")  # take note of this decorator syntax, it's a common pattern
 def index():
     return render_template("index.html")
+
 
 @app.route("/transit/hvt")
 def hvt():
@@ -36,6 +39,7 @@ def hvt():
 
     return render_template("transit.html", title="Happy Valley", stopinfo="Tram Terminus/Sanatorium", vehicles=vehicles)
 
+
 @app.route("/transit/cwb")
 def cwb():
     # Generate new async loop
@@ -56,6 +60,7 @@ def cwb():
     vehicles = parseVehicleStream(vehicles, datetime.today())
 
     return render_template("transit.html", title="Causeway Bay", stopinfo="Times Square", vehicles=vehicles)
+
 
 @app.route("/transit/wanchai")
 def wanchai():
@@ -79,6 +84,7 @@ def wanchai():
 
     return render_template("transit.html", title="Wan Chai", stopinfo="Fenwick Street", vehicles=vehicles)
 
+
 @app.route("/transit/central")
 def central():
     # Generate new async loop
@@ -100,6 +106,7 @@ def central():
     vehicles = parseVehicleStream(vehicles, datetime.today())
 
     return render_template("transit.html", title="Central", stopinfo="Douglas Street", vehicles=vehicles)
+
 
 @app.route("/transit/tinhau")
 def tinhau():
@@ -124,6 +131,7 @@ def tinhau():
 
     return render_template("transit.html", title="Tin Hau", stopinfo="Queens College", vehicles=vehicles)
 
+
 @app.route("/transit/fortress")
 def fortress():
     # Generate new async loop
@@ -147,6 +155,7 @@ def fortress():
 
     return render_template("transit.html", title="Fortress Hill", stopinfo="King's Road", vehicles=vehicles)
 
+
 @app.route("/transit/syp")
 def syp():
     # Generate new async loop
@@ -169,16 +178,19 @@ def syp():
 
     return render_template("transit.html", title="Sai Ying Pun", stopinfo="Hill Road", vehicles=vehicles)
 
+
 if __name__ == "__main__":
     app.run()
+
 
 def parseVehicleStream(vehicles, time):
     v2 = []
     for vehicle in vehicles:
-        if ((vehicle['eta'] - time) <= timedelta(minutes=30)):
+        if (vehicle['eta'] - time) <= timedelta(minutes=30):
             v2.append(getVehicleStatus(vehicle, time))
 
     return sorted(v2, key=lambda k: k['eta'])
+
 
 def getVehicleStatus(vehicle, time):
     if vehicle['isArrived']:
@@ -191,5 +203,3 @@ def getVehicleStatus(vehicle, time):
         vehicle['status'] = "In " + str(ceil(dtime.total_seconds() / 60)) + " Minutes"
 
     return vehicle
-    
-    
